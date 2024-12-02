@@ -17,14 +17,7 @@ internal class Program
             {
                 for (var i = 0; i < report.Levels.Count; ++i)
                 {
-                    var dampenedLevels = new List<int>();
-                    for (var j = 0; j < report.Levels.Count; ++j)
-                    {
-                        if (i != j)
-                        {
-                            dampenedLevels.Add(report.Levels[j]);
-                        }
-                    }
+                    var dampenedLevels = report.Levels.Where((_, idx) => i != idx).ToList();
 
                     if (new Report(dampenedLevels).IsSafe())
                     {
