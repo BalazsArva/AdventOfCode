@@ -9,10 +9,15 @@ internal class Program
         var sum = 0;
         var doOrDont = true;
         var input = File.ReadAllText("Inputs\\input.txt");
+
         var matches = Regex.Matches(
             input,
-            "(?<mul>mul\\((?<lhs>\\d{1,3}),(?<rhs>\\d{1,3})\\))|(?<do>do\\(\\))|(?<donot>don't\\(\\))",
-            RegexOptions.None,
+            """
+            (?<mul>mul\((?<lhs>\d{1,3}),(?<rhs>\d{1,3})\))|
+            (?<do>do\(\))|
+            (?<donot>don't\(\))
+            """,
+            RegexOptions.IgnorePatternWhitespace,
             TimeSpan.FromSeconds(10));
 
         foreach (Match match in matches)
