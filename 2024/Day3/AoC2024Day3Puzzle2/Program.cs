@@ -15,7 +15,7 @@ internal class Program
             RegexOptions.None,
             TimeSpan.FromSeconds(10));
 
-        foreach (Match match in matches.Where(x => x.Success))
+        foreach (Match match in matches)
         {
             if (match.Groups["do"].Success)
             {
