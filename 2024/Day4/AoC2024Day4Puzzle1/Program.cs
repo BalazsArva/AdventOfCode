@@ -4,11 +4,8 @@ internal class Program
 {
     private static async Task Main(string[] args)
     {
-        var input = await File.ReadAllLinesAsync("Inputs\\input.txt");
-        var charMatrix = TransformInput(input);
-
+        var charMatrix = TransformInput(await File.ReadAllLinesAsync("Inputs\\input.txt"));
         var count = 0;
-
         var cols = charMatrix.GetLength(0);
         var rows = charMatrix.GetLength(1);
 
@@ -18,9 +15,7 @@ internal class Program
             {
                 if (charMatrix[x, y] == 'X')
                 {
-                    var wordsInAllDirections = EnumerateNCharactersInAllDirectionFromPosition(charMatrix, x, y, 4);
-
-                    count += wordsInAllDirections.Count(word => word == "XMAS" || word == "SAMX");
+                    count += EnumerateNCharacterStringsInAllDirectionsFromPosition(charMatrix, x, y, 4).Count(word => word == "XMAS" || word == "SAMX");
                 }
             }
         }
@@ -45,24 +40,23 @@ internal class Program
         return result;
     }
 
-    private static IEnumerable<string> EnumerateNCharactersInAllDirectionFromPosition(char[,] input, int x, int y, int numberOfChars)
+    private static IEnumerable<string> EnumerateNCharacterStringsInAllDirectionsFromPosition(char[,] input, int x, int y, int numberOfChars)
     {
         var cols = input.GetLength(0);
         var rows = input.GetLength(1);
-
         var range = Enumerable.Range(0, numberOfChars).ToList();
 
         bool isValidPosition((int X, int Y) pos) => pos.X >= 0 && pos.X < cols && pos.Y >= 0 && pos.Y < rows;
 
-        var indicesTowardsLeftFromPos = range.Select(offsetX => (X: x - offsetX, Y: y)).TakeWhile(isValidPosition);
-        var indicesTowardsRightFromPos = range.Select(offsetX => (X: x + offsetX, Y: y)).TakeWhile(isValidPosition);
-        var indicesTowardsTopFromPos = range.Select(offsetY => (X: x, Y: y - offsetY)).TakeWhile(isValidPosition);
-        var indicesTowardsBottomFromPos = range.Select(offsetY => (X: x, Y: y + offsetY)).TakeWhile(isValidPosition);
+        var indicesTowardsLeftFromPos = range.Select(offset => (X: x - offset, Y: y));
+        var indicesTowardsRightFromPos = range.Select(offset => (X: x + offset, Y: y));
+        var indicesTowardsTopFromPos = range.Select(offset => (X: x, Y: y - offset));
+        var indicesTowardsBottomFromPos = range.Select(offset => (X: x, Y: y + offset));
 
-        var indicesTowardsTopLeftFromPos = range.Select(offset => (X: x - offset, Y: y - offset)).TakeWhile(isValidPosition);
-        var indicesTowardsTopRightFromPos = range.Select(offset => (X: x - offset, Y: y + offset)).TakeWhile(isValidPosition);
-        var indicesTowardsBottomLeftFromPos = range.Select(offset => (X: x + offset, Y: y - offset)).TakeWhile(isValidPosition);
-        var indicesTowardsBottomRightFromPos = range.Select(offset => (X: x + offset, Y: y + offset)).TakeWhile(isValidPosition);
+        var indicesTowardsTopLeftFromPos = range.Select(offset => (X: x - offset, Y: y - offset));
+        var indicesTowardsTopRightFromPos = range.Select(offset => (X: x - offset, Y: y + offset));
+        var indicesTowardsBottomLeftFromPos = range.Select(offset => (X: x + offset, Y: y - offset));
+        var indicesTowardsBottomRightFromPos = range.Select(offset => (X: x + offset, Y: y + offset));
 
         var allIndices = new[]
         {
@@ -76,6 +70,8 @@ internal class Program
             indicesTowardsBottomRightFromPos,
         };
 
-        return allIndices.Select(idxs => new string(idxs.Select(idx => input[idx.X, idx.Y]).ToArray()));
+        return allIndices
+            .Select(idxs => new string(idxs.TakeWhile(isValidPosition).Select(idx => input[idx.X, idx.Y]).ToArray()))
+            .Where(str => str.Length == numberOfChars);
     }
 }
