@@ -1,7 +1,4 @@
-﻿using System.Text;
-using System.Text.RegularExpressions;
-
-namespace AoC2024Day4Puzzle1;
+﻿namespace AoC2024Day4Puzzle1;
 
 internal class Program
 {
@@ -29,34 +26,6 @@ internal class Program
         }
 
         Console.WriteLine(count);
-
-        return;
-        foreach (var column in EnumerateColumns(charMatrix))
-        {
-            // don't use (XMAS)|(SAMX) here because that will only count 1 for "XMASAMX" but the rule is that they can overlap
-            count += Regex.Matches(column, "(XMAS)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-            count += Regex.Matches(column, "(SAMX)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-        }
-
-        foreach (var line in input)
-        {
-            count += Regex.Matches(line, "(XMAS)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-            count += Regex.Matches(line, "(SAMX)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-        }
-
-        foreach (var diag in EnumerateTopLeftToBottomRightDiagonals(charMatrix))
-        {
-            count += Regex.Matches(diag, "(XMAS)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-            count += Regex.Matches(diag, "(SAMX)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-        }
-
-        foreach (var diag in EnumerateTopRightToBottomLeftDiagonals(charMatrix))
-        {
-            count += Regex.Matches(diag, "(XMAS)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-            count += Regex.Matches(diag, "(SAMX)", RegexOptions.IgnoreCase, TimeSpan.FromSeconds(1)).Count;
-        }
-
-        Console.WriteLine(count);
     }
 
     private static char[,] TransformInput(string[] inputLines)
@@ -81,7 +50,7 @@ internal class Program
         var cols = input.GetLength(0);
         var rows = input.GetLength(1);
 
-        var range = Enumerable.Range(0, numberOfChars);
+        var range = Enumerable.Range(0, numberOfChars).ToList();
 
         bool isValidPosition((int X, int Y) pos) => pos.X >= 0 && pos.X < cols && pos.Y >= 0 && pos.Y < rows;
 
@@ -108,141 +77,5 @@ internal class Program
         };
 
         return allIndices.Select(idxs => new string(idxs.Select(idx => input[idx.X, idx.Y]).ToArray()));
-    }
-
-    private static IEnumerable<string> EnumerateColumns(char[,] input)
-    {
-        var cols = input.GetLength(0);
-        var rows = input.GetLength(1);
-
-        for (var x = 0; x < cols; ++x)
-        {
-            var stringBuilder = new StringBuilder(rows);
-
-            for (var y = 0; y < rows; ++y)
-            {
-                stringBuilder.Append(input[x, y]);
-            }
-
-            yield return stringBuilder.ToString();
-        }
-    }
-
-    private static IEnumerable<string> EnumerateTopLeftToBottomRightDiagonals(char[,] input)
-    {
-        var cols = input.GetLength(0);
-        var rows = input.GetLength(1);
-
-        // This is like this (stars)
-        // ************
-        // *
-        // *
-        // *
-        // *
-        var startingPositionsVertically = Enumerable.Range(0, rows);
-        var startingPositionsHorizontally = Enumerable.Range(1, cols - 1);
-
-        foreach (var verticalStartingPosition in startingPositionsVertically)
-        {
-            var stringBuilder = new StringBuilder();
-            var offset = 0;
-
-            while (true)
-            {
-                var x = offset;
-                var y = verticalStartingPosition + offset;
-
-                if (x >= cols || y >= rows)
-                {
-                    break;
-                }
-
-                stringBuilder.Append(input[x, y]);
-                ++offset;
-            }
-
-            yield return stringBuilder.ToString();
-        }
-
-        foreach (var horizontalStartingPosition in startingPositionsHorizontally)
-        {
-            var stringBuilder = new StringBuilder();
-            var offset = 0;
-
-            while (true)
-            {
-                var x = horizontalStartingPosition + offset;
-                var y = offset;
-
-                if (x >= cols || y >= rows)
-                {
-                    break;
-                }
-
-                stringBuilder.Append(input[x, y]);
-                ++offset;
-            }
-
-            yield return stringBuilder.ToString();
-        }
-    }
-
-    private static IEnumerable<string> EnumerateTopRightToBottomLeftDiagonals(char[,] input)
-    {
-        var cols = input.GetLength(0);
-        var rows = input.GetLength(1);
-
-        // This is like this (stars)
-        //            *
-        //            *
-        //            *
-        //            *
-        // ************
-        var startingPositionsVertically = Enumerable.Range(0, rows);
-        var startingPositionsHorizontally = Enumerable.Range(0, cols - 1);
-
-        foreach (var verticalStartingPosition in startingPositionsVertically)
-        {
-            var stringBuilder = new StringBuilder();
-            var offset = 0;
-
-            while (true)
-            {
-                var x = cols - 1 - offset;
-                var y = verticalStartingPosition - offset;
-
-                if (x < 0 || y < 0)
-                {
-                    break;
-                }
-
-                stringBuilder.Append(input[x, y]);
-                ++offset;
-            }
-
-            yield return stringBuilder.ToString();
-        }
-
-        foreach (var horizontalStartingPosition in startingPositionsHorizontally)
-        {
-            var stringBuilder = new StringBuilder();
-            var offset = 0;
-
-            while (true)
-            {
-                var x = horizontalStartingPosition - offset;
-                var y = rows - 1 - offset;
-
-                if (x < 0 || y < 0)
-                {
-                    break;
-                }
-
-                stringBuilder.Append(input[x, y]);
-                ++offset;
-            }
-
-            yield return stringBuilder.ToString();
-        }
     }
 }
