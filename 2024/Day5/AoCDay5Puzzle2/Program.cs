@@ -1,5 +1,6 @@
 ﻿namespace AoCDay5Puzzle2;
 
+// 4230
 internal class Program
 {
     private static async Task Main(string[] args)
@@ -22,12 +23,12 @@ internal class Program
 
     private static (Update Update, bool WasBroken) FixUpdatePages(Update update, IReadOnlyList<PageOrderingRule> rules)
     {
-        var result = update;
+        var updatedPages = update.UpdatedPages.ToList();
         var wasBroken = false;
 
         while (true)
         {
-            var pair = GetFirstOffendingIndexPairsOfInvalidUpdatePages(result, rules);
+            var pair = GetFirstOffendingIndexPairsOfInvalidUpdatePages(updatedPages, rules);
             if (pair == (-1, -1))
             {
                 break;
@@ -35,17 +36,16 @@ internal class Program
 
             wasBroken = true;
 
-            var pagesTemp = result.UpdatedPages.ToList();
-            var a = pagesTemp[pair.Left];
-            var b = pagesTemp[pair.Right];
-            pagesTemp[pair.Left] = b;
-            pagesTemp[pair.Right] = a;
-
-            result = result with
-            {
-                UpdatedPages = pagesTemp.ToList(),
-            };
+            var a = updatedPages[pair.Left];
+            var b = updatedPages[pair.Right];
+            updatedPages[pair.Left] = b;
+            updatedPages[pair.Right] = a;
         }
+
+        var result = update with
+        {
+            UpdatedPages = updatedPages,
+        };
 
         return (result, wasBroken);
     }
@@ -80,14 +80,16 @@ internal class Program
         return new(rules, updates);
     }
 
-    private static (int Left, int Right) GetFirstOffendingIndexPairsOfInvalidUpdatePages(Update update, IReadOnlyList<PageOrderingRule> rules)
+    private static (int Left, int Right) GetFirstOffendingIndexPairsOfInvalidUpdatePages(
+        IReadOnlyList<int> updatedPages,
+        IReadOnlyList<PageOrderingRule> rules)
     {
-        for (var i = 0; i < update.UpdatedPages.Count; i++)
+        for (var i = 0; i < updatedPages.Count; i++)
         {
-            var currentPage = update.UpdatedPages[i];
-            for (var j = i + 1; j < update.UpdatedPages.Count; j++)
+            var currentPage = updatedPages[i];
+            for (var j = i + 1; j < updatedPages.Count; j++)
             {
-                var succeedingPage = update.UpdatedPages[j];
+                var succeedingPage = updatedPages[j];
                 if (rules.Any(r => r.PreceedingPageNumber == succeedingPage && r.SucceedingPageNumber == currentPage))
                 {
                     return (i, j);
