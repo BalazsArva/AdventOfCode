@@ -71,20 +71,13 @@ internal class Map
                 }
                 else
                 {
-                    if (drawPath)
+                    if (!drawPath || !_guardPath.Contains((row, col)))
                     {
-                        if (_guardPath.Contains((row, col)))
-                        {
-                            Console.Write('X');
-                        }
-                        else
-                        {
-                            Console.Write('.');
-                        }
+                        Console.Write('.');
                     }
                     else
                     {
-                        Console.Write('.');
+                        Console.Write('X');
                     }
                 }
             }

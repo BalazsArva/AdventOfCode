@@ -13,7 +13,7 @@ internal class Program
     {
         do
         {
-            map.Draw();
+            map.Draw(true);
             Console.ReadKey();
 
             Console.Clear();
