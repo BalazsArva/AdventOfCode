@@ -9,27 +9,6 @@ internal class Program
         NormalRun(mapDescriptor);
     }
 
-    /*
-    private static void DebugRun(Map map)
-    {
-        do
-        {
-            map.Draw(true);
-            Console.ReadKey();
-
-            Console.Clear();
-        }
-        while (map.MoveGuard());
-
-        var uniquePathPositions = map.GuardPath.Distinct().Count();
-
-        map.Draw(true);
-
-        Console.WriteLine();
-        Console.WriteLine(uniquePathPositions);
-    }
-    */
-
     private static void NormalRun(MapDescriptor mapDescriptor)
     {
         var referenceMap = new Map(
@@ -40,7 +19,7 @@ internal class Program
 
         while (referenceMap.MoveGuard() == Map.MovementResult.MovedSuccessfully) ;
 
-        var referencePathTaken = referenceMap.GuardPath;
+        var referencePathTaken = referenceMap.GuardPath.ToHashSet();
         var couldCauseLoopCount = 0;
         var processed = 0L;
         var total = referenceMap.GuardPath.Count;
@@ -94,101 +73,6 @@ internal class Program
                     }
                 }
             });
-
-        Console.WriteLine();
-        Console.WriteLine(couldCauseLoopCount);
-    }
-
-    private static void NormalRun2(MapDescriptor mapDescriptor)
-    {
-        var couldCauseLoopCount = 0;
-
-        var matrix = Enumerable
-            .Range(0, mapDescriptor.Rows)
-            .Select(row => Enumerable.Range(0, mapDescriptor.Cols).Select(col => new { Row = row, Col = col }))
-            .SelectMany(x => x)
-            .ToList();
-
-        Parallel.ForEach(
-            matrix,
-            element =>
-            {
-                var row = element.Row;
-                var col = element.Col;
-
-                if (mapDescriptor.GuardPosition == (row, col) ||
-                    mapDescriptor.ObstaclePositions.Contains((row, col)))
-                {
-                    Console.WriteLine($"Row {row} Col {col} occupied");
-
-                    return;
-                }
-
-                var map = new Map(
-                    mapDescriptor.Rows,
-                    mapDescriptor.Cols,
-                    mapDescriptor.ObstaclePositions.Append((row, col)).ToList(),
-                    mapDescriptor.GuardPosition);
-
-                while (true)
-                {
-                    var result = map.MoveGuard();
-                    if (result == Map.MovementResult.MovedOffMap)
-                    {
-                        Console.WriteLine($"Row {row} Col {col} moved off map");
-
-                        return;
-                    }
-                    else if (result == Map.MovementResult.EnteredLoop)
-                    {
-                        Console.WriteLine($"Row {row} Col {col} entered loop");
-
-                        Interlocked.Increment(ref couldCauseLoopCount);
-                        return;
-                    }
-                }
-            });
-
-        /*
-        for (var row = 0; row < mapDescriptor.Rows; ++row)
-        {
-            for (var col = 0; col < mapDescriptor.Cols; ++col)
-            {
-                Console.Write($"Row {row} Col {col}");
-
-                if (mapDescriptor.GuardPosition == (row, col) ||
-                    mapDescriptor.ObstaclePositions.Contains((row, col)))
-                {
-                    Console.WriteLine(" occupied");
-                    continue;
-                }
-
-                var map = new Map(
-                    mapDescriptor.Rows,
-                    mapDescriptor.Cols,
-                    mapDescriptor.ObstaclePositions.Append((row, col)).ToList(),
-                    mapDescriptor.GuardPosition);
-
-                while (true)
-                {
-                    var result = map.MoveGuard();
-                    if (result == Map.MovementResult.MovedOffMap)
-                    {
-                        Console.WriteLine(" moved off map");
-
-                        break;
-                    }
-                    else if (result == Map.MovementResult.EnteredLoop)
-                    {
-                        Console.WriteLine(" caused loop");
-
-                        ++couldCauseLoopCount;
-                        break;
-                    }
-                }
-            }
-        }*/
-        //map.Draw(true);
 
         Console.WriteLine();
         Console.WriteLine(couldCauseLoopCount);

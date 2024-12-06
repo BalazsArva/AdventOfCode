@@ -19,6 +19,7 @@ internal class Map
     private readonly IReadOnlyCollection<(int Row, int Col)> _obstaclePositions;
 
     private readonly IList<(int Row, int Col)> _guardPath;
+    private readonly ISet<(int Row, int Col)> _guardPathLookup;
     private (int Row, int Col) _guardPosition;
     private Direction _guardDirection;
 
@@ -37,6 +38,7 @@ internal class Map
         {
             guardPosition,
         };
+        _guardPathLookup = _guardPath.ToHashSet();
         _guardDirection = Direction.Up;
     }
 
@@ -45,21 +47,6 @@ internal class Map
     public int Cols { get; }
 
     public IReadOnlyList<(int Row, int Col)> GuardPath => _guardPath.AsReadOnly();
-
-    public Field GetField(int row, int col)
-    {
-        if ((row, col) == _guardPosition)
-        {
-            return Field.Guard;
-        }
-
-        if (_obstaclePositions.Contains((row, col)))
-        {
-            return Field.Obstacle;
-        }
-
-        return Field.Empty;
-    }
 
     public MovementResult MoveGuard()
     {
@@ -85,6 +72,7 @@ internal class Map
             {
                 _guardPosition = nextPosition;
                 _guardPath.Add(nextPosition);
+                _guardPathLookup.Add(nextPosition);
                 return MovementResult.MovedSuccessfully;
             }
         }
@@ -135,6 +123,12 @@ internal class Map
         (int Row, int Col) previousPosition,
         (int Row, int Col) newPosition)
     {
+        if (!_guardPathLookup.Contains(previousPosition) ||
+            !_guardPathLookup.Contains(newPosition))
+        {
+            return false;
+        }
+
         for (var i = 0; i < _guardPath.Count - 1; ++i)
         {
             if (_guardPath[i] == previousPosition && _guardPath[i + 1] == newPosition)
