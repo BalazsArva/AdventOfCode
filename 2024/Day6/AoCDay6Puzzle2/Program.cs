@@ -19,7 +19,7 @@ internal class Program
 
         while (referenceMap.MoveGuard() == Map.MovementResult.MovedSuccessfully) ;
 
-        var referencePathTaken = referenceMap.GuardPath.ToHashSet();
+        var referencePathTaken = referenceMap.GuardPath.Select(x => (x.Row, x.Col)).ToHashSet();
         var couldCauseLoopCount = 0;
         var processed = 0L;
         var total = referenceMap.GuardPath.Count;
@@ -118,5 +118,3 @@ internal class Program
         return new(currentLine, cols, obstaclePositions, (guardRow, guardCol));
     }
 }
-
-record MapDescriptor(int Rows, int Cols, IReadOnlyList<(int Row, int Col)> ObstaclePositions, (int Row, int Col) GuardPosition);

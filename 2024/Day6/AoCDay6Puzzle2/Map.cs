@@ -9,19 +9,9 @@ internal class Map
         EnteredLoop,
     }
 
-    public enum Field
-    {
-        Empty,
-        Guard,
-        Obstacle,
-    }
-
-    private readonly IReadOnlyCollection<(int Row, int Col)> _obstaclePositions;
-
-    private readonly IList<(int Row, int Col)> _guardPath;
-    private readonly ISet<(int Row, int Col)> _guardPathLookup;
-    private (int Row, int Col) _guardPosition;
-    private Direction _guardDirection;
+    private readonly IReadOnlySet<(int Row, int Col)> _obstaclePositions;
+    private readonly HashSet<(int Row, int Col, Direction Direction)> _guardPathLookup;
+    private (int Row, int Col, Direction Direction) _guardPosition;
 
     public Map(
         int rows,
@@ -31,47 +21,46 @@ internal class Map
     {
         Rows = rows;
         Cols = cols;
-        _obstaclePositions = obstaclePositions;
-        _guardPosition = guardPosition;
+        _obstaclePositions = obstaclePositions.ToHashSet();
+        _guardPosition = (guardPosition.Row, guardPosition.Col, Direction.Up);
 
-        _guardPath = new List<(int Row, int Col)>
+        _guardPathLookup = new HashSet<(int Row, int Col, Direction Direction)>
         {
-            guardPosition,
+            (guardPosition.Row, guardPosition.Col, Direction.Up),
         };
-        _guardPathLookup = _guardPath.ToHashSet();
-        _guardDirection = Direction.Up;
     }
 
     public int Rows { get; }
 
     public int Cols { get; }
 
-    public IReadOnlyList<(int Row, int Col)> GuardPath => _guardPath.AsReadOnly();
+    public IReadOnlySet<(int Row, int Col, Direction Direction)> GuardPath => _guardPathLookup;
 
     public MovementResult MoveGuard()
     {
         for (var i = 0; i < 4; ++i)
         {
-            var nextPosition = ComputePosition(_guardPosition, _guardDirection);
+            var nextPosition = ComputeNextPosition(_guardPosition);
 
             if (IsOffMap(nextPosition))
             {
                 return MovementResult.MovedOffMap;
             }
 
-            if (EnteredIntoALoop(_guardPosition, nextPosition))
+            if (EnteredIntoALoop(nextPosition))
             {
                 return MovementResult.EnteredLoop;
             }
 
-            if (_obstaclePositions.Contains(nextPosition))
+            if (_obstaclePositions.Contains((nextPosition.Row, nextPosition.Col)))
             {
-                _guardDirection = _guardDirection.RotateRight();
+                // This is not a move, just a change of direction. The next iteration will check whether we can move in this direction,
+                // so don't add it to the path yet, only on successful move.
+                _guardPosition = (_guardPosition.Row, _guardPosition.Col, _guardPosition.Direction.RotateRight());
             }
             else
             {
                 _guardPosition = nextPosition;
-                _guardPath.Add(nextPosition);
                 _guardPathLookup.Add(nextPosition);
                 return MovementResult.MovedSuccessfully;
             }
@@ -80,37 +69,7 @@ internal class Map
         throw new Exception("Tried all directions, cannot move.");
     }
 
-    public void Draw(bool drawPath = false)
-    {
-        for (var row = 0; row < Rows; ++row)
-        {
-            for (var col = 0; col < Cols; ++col)
-            {
-                if ((row, col) == _guardPosition)
-                {
-                    Console.Write('^');
-                }
-                else if (_obstaclePositions.Contains((row, col)))
-                {
-                    Console.Write('#');
-                }
-                else
-                {
-                    if (!drawPath || !_guardPath.Contains((row, col)))
-                    {
-                        Console.Write('.');
-                    }
-                    else
-                    {
-                        Console.Write('X');
-                    }
-                }
-            }
-            Console.WriteLine();
-        }
-    }
-
-    private bool IsOffMap((int Row, int Col) position)
+    private bool IsOffMap((int Row, int Col, Direction Direction) position)
     {
         return
             position.Row < 0 ||
@@ -119,31 +78,19 @@ internal class Map
             position.Col >= Cols;
     }
 
-    private bool EnteredIntoALoop(
-        (int Row, int Col) previousPosition,
-        (int Row, int Col) newPosition)
+    private bool EnteredIntoALoop((int Row, int Col, Direction Direction) newPosition)
     {
-        if (!_guardPathLookup.Contains(previousPosition) ||
-            !_guardPathLookup.Contains(newPosition))
-        {
-            return false;
-        }
-
-        for (var i = 0; i < _guardPath.Count - 1; ++i)
-        {
-            if (_guardPath[i] == previousPosition && _guardPath[i + 1] == newPosition)
-            {
-                return true;
-            }
-        }
-        return false;
+        return _guardPathLookup.Contains(newPosition);
     }
 
-    private static (int Row, int Col) ComputePosition((int Row, int Col) from, Direction direction) => direction switch
+    private static (int Row, int Col, Direction Direction) ComputeNextPosition((int Row, int Col, Direction Direction) from)
     {
-        Direction.Up => (from.Row - 1, from.Col),
-        Direction.Right => (from.Row, from.Col + 1),
-        Direction.Down => (from.Row + 1, from.Col),
-        _ => (from.Row, from.Col - 1),
-    };
+        return from.Direction switch
+        {
+            Direction.Up => (from.Row - 1, from.Col, from.Direction),
+            Direction.Right => (from.Row, from.Col + 1, from.Direction),
+            Direction.Down => (from.Row + 1, from.Col, from.Direction),
+            _ => (from.Row, from.Col - 1, from.Direction),
+        };
+    }
 }
