@@ -8,7 +8,7 @@ internal class Program
         var total = 0UL;
         foreach (var equation in input)
         {
-            var operatorCombinations = OperatorHelper.CreateAllPossibleOperatorCombinations(equation.Operands.Count - 1);
+            var operatorCombinations = OperatorHelper.CreateAllPossibleOperatorCombinationsNoRecursion(equation.Operands.Count - 1);
             foreach (var operatorCombination in operatorCombinations)
             {
                 var isValid = EquationCalculator.IsValidEquation(equation, operatorCombination);
